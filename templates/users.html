@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users - EduIF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="animated-bg"></div>
+
+    <nav>
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard') }}" class="logo">
+                <div class="logo-icon">🎓</div>
+                <span class="logo-text">EduIF</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('students') }}">Students</a></li>
+                <li><a href="{{ url_for('upload') }}">Upload</a></li>
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('logs') }}">Logs</a></li>
+                <li><a href="{{ url_for('logout') }}" style="color: var(--danger);">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">👥 User Management</h1>
+                <p class="card-subtitle">Admin only - Manage system users and permissions</p>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Username</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Failed Attempts</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td><strong>#{{ user[0] }}</strong></td>
+                            <td>{{ user[1] }}</td>
+                            <td><span class="badge badge-{{ user[2] }}">{{ user[2].upper() }}</span></td>
+                            <td>
+                                {% if user[3] == 1 %}
+                                <span class="badge badge-locked">🔒 LOCKED</span>
+                                {% else %}
+                                <span class="badge badge-active">✅ ACTIVE</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if user[4] > 0 %}
+                                <span style="color: var(--danger); font-weight: 600;">{{ user[4] }}/3</span>
+                                {% else %}
+                                <span style="color: var(--success);">0/3</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user[5] }}</td>
+                            <td>
+                                {% if user[3] == 1 %}
+                                <a href="{{ url_for('unlock_user', user_id=user[0]) }}" class="btn btn-success"
+                                    style="padding: 0.5rem 1rem; font-size: 0.875rem;">🔓 Unlock</a>
+                                {% else %}
+                                <span style="color: #64748b;">No action needed</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🔐 Security Policies</h2>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                <div
+                    style="padding: 1.5rem; background: #f8fafc; border-radius: 12px; border-left: 4px solid var(--danger);">
+                    <h3 style="margin-bottom: 0.5rem; color: var(--dark);">Account Lockout</h3>
+                    <p style="color: #64748b;">Accounts are automatically locked after 3 consecutive failed login
+                        attempts</p>
+                </div>
+
+                <div
+                    style="padding: 1.5rem; background: #f8fafc; border-radius: 12px; border-left: 4px solid var(--success);">
+                    <h3 style="margin-bottom: 0.5rem; color: var(--dark);">Admin Unlock</h3>
+                    <p style="color: #64748b;">Only administrators can unlock locked user accounts</p>
+                </div>
+
+                <div
+                    style="padding: 1.5rem; background: #f8fafc; border-radius: 12px; border-left: 4px solid var(--warning);">
+                    <h3 style="margin-bottom: 0.5rem; color: var(--dark);">Attempt Reset</h3>
+                    <p style="color: #64748b;">Failed attempts are reset to 0 upon successful login</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

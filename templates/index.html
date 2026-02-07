@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduIF - Educational Institution Security</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="animated-bg"></div>
+    
+    <div class="hero">
+        <div class="container">
+            <div class="login-logo" style="margin: 0 auto 2rem;">🎓</div>
+            <h1 class="hero-title">Welcome to EduIF</h1>
+            <p class="hero-subtitle">Educational Institution Information Security Platform</p>
+            <div class="hero-buttons">
+                <a href="{{ url_for('login') }}" class="btn btn-primary">Login to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h3 class="feature-title">Secure Login</h3>
+                <p class="feature-description">Account locks after 3 failed login attempts to protect against unauthorized access</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">👥</div>
+                <h3 class="feature-title">Role-Based Access</h3>
+                <p class="feature-description">Admin, Staff, and Student roles with different permission levels</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3 class="feature-title">Data Encryption</h3>
+                <p class="feature-description">Student data is encrypted and stored securely in the database</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔓</div>
+                <h3 class="feature-title">Authorized Decryption</h3>
+                <p class="feature-description">Only authorized users can decrypt and view sensitive student information</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <h3 class="feature-title">Malware Scanner</h3>
+                <p class="feature-description">Automatic detection of suspicious files during upload</p>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📋</div>
+                <h3 class="feature-title">Activity Logging</h3>
+                <p class="feature-description">Every user action is recorded for audit and security purposes</p>
+            </div>
+        </div>
+
+        <div class="card text-center">
+            <h2 class="card-title">Default Login Credentials</h2>
+            <p class="card-subtitle mb-3">For testing purposes only - change these in production!</p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; text-align: left;">
+                <div style="padding: 1rem; background: #f8fafc; border-radius: 12px;">
+                    <strong>Admin:</strong><br>
+                    Username: admin<br>
+                    Password: admin123
+                </div>
+                <div style="padding: 1rem; background: #f8fafc; border-radius: 12px;">
+                    <strong>Staff:</strong><br>
+                    Username: staff<br>
+                    Password: staff123
+                </div>
+                <div style="padding: 1rem; background: #f8fafc; border-radius: 12px;">
+                    <strong>Student:</strong><br>
+                    Username: student<br>
+                    Password: student123
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

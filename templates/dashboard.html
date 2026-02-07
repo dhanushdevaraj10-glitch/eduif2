@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - EduIF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="animated-bg"></div>
+
+    <nav>
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard') }}" class="logo">
+                <div class="logo-icon">🎓</div>
+                <span class="logo-text">EduIF</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                {% if role in ['admin', 'staff'] %}
+                <li><a href="{{ url_for('students') }}">Students</a></li>
+                <li><a href="{{ url_for('attendance') }}">Attendance</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('upload') }}">Upload</a></li>
+                {% if role == 'admin' %}
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('logs') }}">Logs</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('logout') }}" style="color: var(--danger);">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">Welcome, {{ username }}! 👋</h1>
+                <p class="card-subtitle">Role: <span class="badge badge-{{ role }}">{{ role.upper() }}</span></p>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value">{{ total_users }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">🎓</div>
+                <div class="stat-value">{{ total_students }}</div>
+                <div class="stat-label">Students Registered</div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value">{{ today_activities }}</div>
+                <div class="stat-label">Today's Activities</div>
+            </div>
+
+            <div class="stat-card danger">
+                <div class="stat-icon">⚠️</div>
+                <div class="stat-value">{{ suspicious_files }}</div>
+                <div class="stat-label">Suspicious Files Blocked</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🔐 Your Access Permissions</h2>
+            </div>
+
+            {% if role == 'admin' %}
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3 class="feature-title">Full Access</h3>
+                    <p class="feature-description">Manage users, students, view logs, and all system features</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3 class="feature-title">User Management</h3>
+                    <p class="feature-description">Create, edit, unlock user accounts</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📋</div>
+                    <h3 class="feature-title">Activity Logs</h3>
+                    <p class="feature-description">View all system activity and security logs</p>
+                </div>
+            </div>
+            {% elif role == 'staff' %}
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎓</div>
+                    <h3 class="feature-title">Academic Access</h3>
+                    <p class="feature-description">Manage student records and academic data</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📁</div>
+                    <h3 class="feature-title">File Upload</h3>
+                    <p class="feature-description">Upload files with malware scanning</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <h3 class="feature-title">Limited Access</h3>
+                    <p class="feature-description">View your own information and upload files</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📁</div>
+                    <h3 class="feature-title">File Upload</h3>
+                    <p class="feature-description">Upload files with malware scanning</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🛡️ Security Features Active</h2>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div
+                    style="padding: 1.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin-bottom: 0.5rem;">🔐 Login Protection</h3>
+                    <p style="opacity: 0.9; font-size: 0.9rem;">3 attempt limit with account lockout</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin-bottom: 0.5rem;">🔒 Data Encryption</h3>
+                    <p style="opacity: 0.9; font-size: 0.9rem;">All student data encrypted at rest</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin-bottom: 0.5rem;">🛡️ Malware Scanner</h3>
+                    <p style="opacity: 0.9; font-size: 0.9rem;">Real-time file scanning enabled</p>
+                </div>
+                <div
+                    style="padding: 1.5rem; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin-bottom: 0.5rem;">📋 Activity Logging</h3>
+                    <p style="opacity: 0.9; font-size: 0.9rem;">All actions tracked and recorded</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

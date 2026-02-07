@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload - EduIF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="animated-bg"></div>
+
+    <nav>
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard') }}" class="logo">
+                <div class="logo-icon">🎓</div>
+                <span class="logo-text">EduIF</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                {% if session.get('role') in ['admin', 'staff'] %}
+                <li><a href="{{ url_for('students') }}">Students</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('upload') }}">Upload</a></li>
+                {% if session.get('role') == 'admin' %}
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('logs') }}">Logs</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('logout') }}" style="color: var(--danger);">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">🛡️ Secure File Upload</h1>
+                <p class="card-subtitle">All files are scanned for malware before acceptance</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label" for="file">Select File</label>
+                    <input type="file" class="form-control" id="file" name="file" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">🔍 Upload & Scan File</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">🛡️ Malware Scanner Information</h2>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🔍</div>
+                    <h3 class="feature-title">Real-Time Scanning</h3>
+                    <p class="feature-description">Every uploaded file is scanned immediately for suspicious patterns
+                        and malware signatures</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚠️</div>
+                    <h3 class="feature-title">Threat Detection</h3>
+                    <p class="feature-description">Detects suspicious file extensions (.exe, .bat, .cmd, .vbs) and
+                        malicious file names</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🚫</div>
+                    <h3 class="feature-title">Automatic Blocking</h3>
+                    <p class="feature-description">Suspicious files are automatically blocked and flagged for
+                        administrator review</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3 class="feature-title">Activity Logging</h3>
+                    <p class="feature-description">All upload attempts are logged with scan results for security
+                        auditing</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-warning">
+            <strong>⚠️ Blocked File Types:</strong><br>
+            The following file types are automatically flagged as suspicious:<br>
+            • Executable files (.exe, .bat, .cmd, .vbs, .js)<br>
+            • Files containing keywords: malware, virus, trojan, ransomware, hack
+        </div>
+
+        <div class="alert alert-success">
+            <strong>✅ Safe File Types:</strong><br>
+            Documents (.pdf, .doc, .docx), Images (.jpg, .png, .gif), Archives (.zip, .rar), and other common file types
+            are generally safe.
+        </div>
+    </div>
+
+    <script>
+        // Add file name preview
+        document.getElementById('file').addEventListener('change', function (e) {
+            const fileName = e.target.files[0]?.name;
+            if (fileName) {
+                const label = document.querySelector('label[for="file"]');
+                label.innerHTML = `Selected File: <strong>${fileName}</strong>`;
+            }
+        });
+    </script>
+</body>
+
+</html>

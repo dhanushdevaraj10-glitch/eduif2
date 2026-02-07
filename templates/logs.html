@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Logs - EduIF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="animated-bg"></div>
+
+    <nav>
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard') }}" class="logo">
+                <div class="logo-icon">🎓</div>
+                <span class="logo-text">EduIF</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('students') }}">Students</a></li>
+                <li><a href="{{ url_for('upload') }}">Upload</a></li>
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('logs') }}">Logs</a></li>
+                <li><a href="{{ url_for('logout') }}" style="color: var(--danger);">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">📋 Activity Logs</h1>
+                <p class="card-subtitle">Complete audit trail of all system activities (Last 100 entries)</p>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Timestamp</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>IP Address</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td><strong>#{{ log[0] }}</strong></td>
+                            <td>{{ log[5] }}</td>
+                            <td>
+                                {% if log[2] %}
+                                {{ log[2] }}
+                                {% else %}
+                                <span style="color: #64748b;">Unknown</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if 'SUCCESS' in log[3] %}
+                                <span class="badge badge-active">{{ log[3] }}</span>
+                                {% elif 'FAILED' in log[3] or 'LOCKED' in log[3] or 'BLOCKED' in log[3] %}
+                                <span class="badge badge-locked">{{ log[3] }}</span>
+                                {% elif 'ADDED' in log[3] or 'UNLOCKED' in log[3] %}
+                                <span class="badge badge-staff">{{ log[3] }}</span>
+                                {% else %}
+                                <span class="badge badge-student">{{ log[3] }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ log[4] }}</td>
+                            <td style="font-size: 0.875rem; color: #64748b;">{{ log[6] if log[6] else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📊 Log Categories</h2>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                <div
+                    style="padding: 1rem; background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin-bottom: 0.5rem;">✅ Success Events</h3>
+                    <p style="opacity: 0.9; font-size: 0.9rem;">LOGIN_SUCCESS, FILE_UPLOAD_SUCCESS</p>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin-bottom: 0.5rem;">⚠️ Security Events</h3>
+                    <p style="opacity: 0.9; font-size: 0.9rem;">LOGIN_FAILED, ACCOUNT_LOCKED, FILE_UPLOAD_BLOCKED</p>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin-bottom: 0.5rem;">📝 Data Events</h3>
+                    <p style="opacity: 0.9; font-size: 0.9rem;">STUDENT_ADDED, STUDENTS_VIEW</p>
+                </div>
+
+                <div
+                    style="padding: 1rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white;">
+                    <h3 style="margin-bottom: 0.5rem;">👥 Admin Events</h3>
+                    <p style="opacity: 0.9; font-size: 0.9rem;">USER_UNLOCKED, LOGS_VIEW, USERS_VIEW</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert alert-info">
+            <strong>📋 Logging Information:</strong> All user activities are automatically logged with timestamp, IP
+            address, and action details. Logs are retained for security auditing and compliance purposes.
+        </div>
+    </div>
+</body>
+
+</html>

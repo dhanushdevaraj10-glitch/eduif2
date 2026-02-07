@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Report - EduIF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="animated-bg"></div>
+
+    <nav>
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard') }}" class="logo">
+                <div class="logo-icon">🎓</div>
+                <span class="logo-text">EduIF</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                {% if role in ['admin', 'staff'] %}
+                <li><a href="{{ url_for('students') }}">Students</a></li>
+                <li><a href="{{ url_for('attendance') }}">Attendance</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('upload') }}">Upload</a></li>
+                {% if role == 'admin' %}
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('logs') }}">Logs</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('logout') }}" style="color: var(--danger);">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">📊 Attendance Report</h1>
+                <p class="card-subtitle">View attendance history and statistics</p>
+            </div>
+
+            <form method="GET" action="{{ url_for('attendance_report') }}"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                <div class="form-group">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" class="form-control" name="start_date" value="{{ start_date }}">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Date</label>
+                    <input type="date" class="form-control" name="end_date" value="{{ end_date }}">
+                </div>
+                <div class="form-group" style="display: flex; align-items: flex-end;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Filter Report</button>
+                </div>
+            </form>
+
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <a href="{{ url_for('attendance') }}" class="btn btn-success">← Back to Attendance</a>
+            </div>
+        </div>
+
+        {% if records %}
+        <div class="card">
+            <h2 class="card-title">Attendance Records ({{ records|length }})</h2>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Student ID</th>
+                            <th>Student Name</th>
+                            <th>Status</th>
+                            <th>Marked By</th>
+                            <th>Marked At</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td><strong>{{ record.date }}</strong></td>
+                            <td>{{ record.student_id }}</td>
+                            <td>{{ record.name }}</td>
+                            <td>
+                                {% if record.status == 'Present' %}
+                                <span class="badge badge-active">✓ Present</span>
+                                {% elif record.status == 'Absent' %}
+                                <span class="badge badge-locked">✗ Absent</span>
+                                {% elif record.status == 'Leave' %}
+                                <span class="badge badge-warning">⊘ Leave</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ record.marked_by }}</td>
+                            <td>{{ record.marked_at }}</td>
+                            <td style="font-size: 0.875rem;">{{ record.notes if record.notes else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="card">
+            <h2 class="card-title">📈 Summary Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <div class="stat-icon">✓</div>
+                    <div class="stat-value">{{ records|selectattr('status', 'equalto', 'Present')|list|length }}</div>
+                    <div class="stat-label">Total Present</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-icon">✗</div>
+                    <div class="stat-value">{{ records|selectattr('status', 'equalto', 'Absent')|list|length }}</div>
+                    <div class="stat-label">Total Absent</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">⊘</div>
+                    <div class="stat-value">{{ records|selectattr('status', 'equalto', 'Leave')|list|length }}</div>
+                    <div class="stat-label">Total Leave</div>
+                </div>
+                <div class="stat-card primary">
+                    <div class="stat-icon">📋</div>
+                    <div class="stat-value">{{ records|length }}</div>
+                    <div class="stat-label">Total Records</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Attendance Percentage by Student -->
+        <div class="card">
+            <h2 class="card-title">👥 Student-wise Attendance</h2>
+            {% set student_stats = {} %}
+            {% for record in records %}
+            {% if record.student_id not in student_stats %}
+            {% set _ = student_stats.update({record.student_id: {'name': record.name, 'present': 0, 'absent': 0,
+            'leave': 0, 'total': 0}}) %}
+            {% endif %}
+            {% set _ = student_stats[record.student_id].update({'total': student_stats[record.student_id].total + 1}) %}
+            {% if record.status == 'Present' %}
+            {% set _ = student_stats[record.student_id].update({'present': student_stats[record.student_id].present +
+            1}) %}
+            {% elif record.status == 'Absent' %}
+            {% set _ = student_stats[record.student_id].update({'absent': student_stats[record.student_id].absent + 1})
+            %}
+            {% elif record.status == 'Leave' %}
+            {% set _ = student_stats[record.student_id].update({'leave': student_stats[record.student_id].leave + 1}) %}
+            {% endif %}
+            {% endfor %}
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Leave</th>
+                            <th>Total Days</th>
+                            <th>Attendance %</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student_id, stats in student_stats.items() %}
+                        {% set percentage = ((stats.present / stats.total) * 100)|round(1) if stats.total > 0 else 0 %}
+                        <tr>
+                            <td><strong>{{ student_id }}</strong></td>
+                            <td>{{ stats.name }}</td>
+                            <td><span class="badge badge-active">{{ stats.present }}</span></td>
+                            <td><span class="badge badge-locked">{{ stats.absent }}</span></td>
+                            <td><span class="badge badge-warning">{{ stats.leave }}</span></td>
+                            <td>{{ stats.total }}</td>
+                            <td>
+                                {% if percentage >= 75 %}
+                                <span class="badge badge-active">{{ percentage }}%</span>
+                                {% elif percentage >= 50 %}
+                                <span class="badge badge-warning">{{ percentage }}%</span>
+                                {% else %}
+                                <span class="badge badge-locked">{{ percentage }}%</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% else %}
+        <div class="card text-center">
+            <div style="padding: 3rem; color: #64748b;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+                <h3>No attendance records found</h3>
+                <p>{% if start_date and end_date %}No records found for the selected date range{% else %}Start marking
+                    attendance to see reports{% endif %}</p>
+                <a href="{{ url_for('attendance') }}" class="btn btn-primary" style="margin-top: 1rem;">Mark
+                    Attendance</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</body>
+
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance - EduIF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <div class="animated-bg"></div>
+
+    <nav>
+        <div class="nav-container">
+            <a href="{{ url_for('dashboard') }}" class="logo">
+                <div class="logo-icon">🎓</div>
+                <span class="logo-text">EduIF</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+                {% if role in ['admin', 'staff'] %}
+                <li><a href="{{ url_for('students') }}">Students</a></li>
+                <li><a href="{{ url_for('attendance') }}">Attendance</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('upload') }}">Upload</a></li>
+                {% if role == 'admin' %}
+                <li><a href="{{ url_for('users') }}">Users</a></li>
+                <li><a href="{{ url_for('logs') }}">Logs</a></li>
+                {% endif %}
+                <li><a href="{{ url_for('logout') }}" style="color: var(--danger);">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">📋 Student Attendance</h1>
+                <p class="card-subtitle">Mark and manage student attendance</p>
+            </div>
+
+            <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 2rem; flex-wrap: wrap;">
+                <form method="GET" action="{{ url_for('attendance') }}"
+                    style="display: flex; gap: 1rem; align-items: center;">
+                    <label class="form-label" style="margin: 0;">Select Date:</label>
+                    <input type="date" class="form-control" name="date" value="{{ filter_date }}"
+                        onchange="this.form.submit()" style="width: auto;">
+                </form>
+                <a href="{{ url_for('attendance_report') }}" class="btn btn-primary">📊 View Report</a>
+            </div>
+
+            <div class="alert alert-info">
+                <strong>📅 Showing attendance for: {{ filter_date }}</strong><br>
+                Mark attendance as Present, Absent, or Leave for each student below.
+            </div>
+        </div>
+
+        {% if students %}
+        <div class="card">
+            <h2 class="card-title">Mark Attendance ({{ students|length }} Students)</h2>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student ID</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Marked By</th>
+                            <th>Marked At</th>
+                            <th>Notes</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td><strong>{{ student.student_id }}</strong></td>
+                            <td>{{ student.name }}</td>
+                            <td>
+                                {% if student.attendance %}
+                                {% if student.attendance.status == 'Present' %}
+                                <span class="badge badge-active">✓ Present</span>
+                                {% elif student.attendance.status == 'Absent' %}
+                                <span class="badge badge-locked">✗ Absent</span>
+                                {% elif student.attendance.status == 'Leave' %}
+                                <span class="badge badge-warning">⊘ Leave</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="badge badge-student">Not Marked</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ student.attendance.marked_by if student.attendance else '-' }}</td>
+                            <td>{{ student.attendance.marked_at if student.attendance else '-' }}</td>
+                            <td style="font-size: 0.875rem;">{{ student.attendance.notes if student.attendance and
+                                student.attendance.notes else '-' }}</td>
+                            <td>
+                                <button
+                                    onclick="openAttendanceModal('{{ student.student_id }}', '{{ student.name }}', '{{ filter_date }}')"
+                                    class="btn btn-success" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                                    {% if student.attendance %}Update{% else %}Mark{% endif %}
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="card text-center">
+            <div style="padding: 3rem; color: #64748b;">
+                <div style="font-size: 4rem; margin-bottom: 1rem;">📚</div>
+                <h3>No students registered</h3>
+                <p>Add students first to mark attendance</p>
+                <a href="{{ url_for('students') }}" class="btn btn-primary" style="margin-top: 1rem;">Add Students</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card">
+            <h2 class="card-title">📊 Quick Stats</h2>
+            <div class="stats-grid">
+                <div class="stat-card success">
+                    <div class="stat-icon">✓</div>
+                    <div class="stat-value">{{ students|selectattr('attendance.status', 'equalto',
+                        'Present')|list|length }}</div>
+                    <div class="stat-label">Present Today</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-icon">✗</div>
+                    <div class="stat-value">{{ students|selectattr('attendance.status', 'equalto', 'Absent')|list|length
+                        }}</div>
+                    <div class="stat-label">Absent Today</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-icon">⊘</div>
+                    <div class="stat-value">{{ students|selectattr('attendance.status', 'equalto', 'Leave')|list|length
+                        }}</div>
+                    <div class="stat-label">On Leave</div>
+                </div>
+                <div class="stat-card primary">
+                    <div class="stat-icon">?</div>
+                    <div class="stat-value">{{ students|rejectattr('attendance')|list|length }}</div>
+                    <div class="stat-label">Not Marked</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance Modal -->
+    <div id="attendanceModal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+        <div class="card" style="max-width: 500px; margin: 2rem; animation: fadeInUp 0.3s ease;">
+            <h2 class="card-title">Mark Attendance</h2>
+            <form method="POST" action="{{ url_for('attendance') }}">
+                <input type="hidden" name="student_id" id="modal_student_id">
+                <input type="hidden" name="date" id="modal_date">
+
+                <div class="form-group">
+                    <label class="form-label">Student</label>
+                    <input type="text" class="form-control" id="modal_student_name" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Date</label>
+                    <input type="text" class="form-control" id="modal_date_display" readonly>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-control" required>
+                        <option value="Present">✓ Present</option>
+                        <option value="Absent">✗ Absent</option>
+                        <option value="Leave">⊘ Leave</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Notes (Optional)</label>
+                    <input type="text" class="form-control" name="notes" placeholder="Add any notes...">
+                </div>
+
+                <div style="display: flex; gap: 1rem;">
+                    <button type="submit" class="btn btn-success" style="flex: 1;">Save Attendance</button>
+                    <button type="button" onclick="closeAttendanceModal()" class="btn btn-danger"
+                        style="flex: 1;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openAttendanceModal(studentId, studentName, date) {
+            document.getElementById('modal_student_id').value = studentId;
+            document.getElementById('modal_student_name').value = studentId + ' - ' + studentName;
+            document.getElementById('modal_date').value = date;
+            document.getElementById('modal_date_display').value = date;
+            document.getElementById('attendanceModal').style.display = 'flex';
+        }
+
+        function closeAttendanceModal() {
+            document.getElementById('attendanceModal').style.display = 'none';
+        }
+
+        // Close modal on background click
+        document.getElementById('attendanceModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeAttendanceModal();
+            }
+        });
+    </script>
+</body>
+
+</html>
